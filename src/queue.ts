@@ -5,12 +5,12 @@
  * @copyright Romain Lanz <romain.lanz@pm.me>
  */
 
-import { isClass } from '@sindresorhus/is'
-import { Queue, QueueOptions, Worker, WorkerOptions } from 'bullmq'
-import { RuntimeException } from '@poppinss/utils'
-import { Job } from './job.js'
-import type { Job as BullMQJob, JobsOptions } from 'bullmq'
 import type { ApplicationService, LoggerService } from '@adonisjs/core/types'
+import { RuntimeException } from '@poppinss/utils'
+import { isClass } from '@sindresorhus/is'
+import type { Job as BullMQJob, JobsOptions } from 'bullmq'
+import { Queue, QueueOptions, Worker, WorkerOptions } from 'bullmq'
+import { Job } from './job.js'
 import type {
   AllowedJobTypes,
   InferJobPayload,
