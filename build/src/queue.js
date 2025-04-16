@@ -77,6 +77,23 @@ export class QueueManager {
         if (typeof computedConfig.connection === 'undefined') {
             computedConfig.connection = this.#options.defaultConnection;
         }
+        // let worker = new Worker(
+        // 	queueName || 'default',
+        // 	async (job) => {
+        // 		let jobClassInstance: Job
+        // 		try {
+        // 			jobClassInstance = await this.#instantiateJob(job)
+        // 		} catch (e) {
+        // 			this.#logger.error(`Job ${job.name} was not able to be created`)
+        // 			this.#logger.error(e)
+        // 			return
+        // 		}
+        // 		this.#logger.info(`Job ${job.name} started`)
+        // 		await this.#app.container.call(jobClassInstance, 'handle', [job.data])
+        // 		this.#logger.info(`Job ${job.name} finished`)
+        // 	},
+        // 	computedConfig as WorkerOptions,
+        // )
         let worker = new Worker(queueName || 'default', async (job) => {
             let jobClassInstance;
             try {
@@ -88,7 +105,7 @@ export class QueueManager {
                 return;
             }
             this.#logger.info(`Job ${job.name} started`);
-            await this.#app.container.call(jobClassInstance, 'handle', [job.data]);
+            this.#app.container.call(jobClassInstance, 'handle', [job.data]);
             this.#logger.info(`Job ${job.name} finished`);
         }, computedConfig);
         worker.on('failed', async (job, error) => {
