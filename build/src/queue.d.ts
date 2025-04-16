@@ -11,9 +11,9 @@ import type { AllowedJobTypes, InferJobPayload, JobHandlerConstructor, QueueConf
 export declare class QueueManager {
     #private;
     constructor(options: QueueConfig, logger: LoggerService, app: ApplicationService);
-    dispatch<Job extends AllowedJobTypes>(job: Job, payload: Job extends JobHandlerConstructor ? InferJobPayload<Job> : Job extends Promise<infer A> ? A extends {
+    dispatch<Job extends AllowedJobTypes>(job: Job, payload: Job extends JobHandlerConstructor ? InferJobPayload<Job> : Job extends Promise<infer A> ? (A extends {
         default: JobHandlerConstructor;
-    } ? InferJobPayload<A['default']> : never : never, options?: JobsOptions & {
+    } ? InferJobPayload<A['default']> : never) : never, options?: JobsOptions & {
         queueName?: string;
     }): Promise<BullMQJob<any, any, string>>;
     process({ queueName }: {
