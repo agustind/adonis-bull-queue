@@ -111,6 +111,7 @@ export class QueueManager {
 
 		const queue = this.#queues.get(queueName || 'default')
 		const concurrency = await queue?.getGlobalConcurrency()
+		queue?.setGlobalConcurrency(2)
 
 		this.#logger.info(`Queue [${queueName || 'default'}] concurrency set to ${concurrency}`)
 
