@@ -98,7 +98,7 @@ export class QueueManager {
         console.log('--------processing jobs---------');
         console.log(queue.name);
         console.log(`Queue ${queue.name} concurrency set to ${concurrency}`);
-        computedConfig.concurrency = concurrency ? concurrency : 1;
+        computedConfig.concurrency = 20;
         const worker = new Worker(queueName || 'default', async (job) => {
             let jobClassInstance;
             try {
