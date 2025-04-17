@@ -18,7 +18,7 @@ export declare class QueueManager {
     }): Promise<BullMQJob<any, any, string>>;
     process({ queueName }: {
         queueName?: string;
-    }): this;
+    }): Promise<this>;
     get(queueName?: string): Queue<any, any, string, any, any, string> | undefined;
     getOrSet(queueName?: string): Queue<any, any, string, any, any, string>;
     clear(queueName?: string): Promise<void>;

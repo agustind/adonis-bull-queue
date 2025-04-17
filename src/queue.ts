@@ -98,7 +98,7 @@ export class QueueManager {
 		})
 	}
 
-	process({ queueName }: { queueName?: string }) {
+	async process({ queueName }: { queueName?: string }) {
 		this.#logger.info(`Queue [${queueName || 'default'}] processing started...`)
 
 		const computedConfig = {
@@ -109,60 +109,45 @@ export class QueueManager {
 			computedConfig.connection = this.#options.defaultConnection
 		}
 
-		// let worker = new Worker(
-		// 	queueName || 'default',
-		// 	async (job) => {
-		// 		let jobClassInstance: Job
+		const queue = this.#queues.get(queueName || 'default')
+		const concurrency = await queue?.getGlobalConcurrency()
 
-		// 		try {
-		// 			jobClassInstance = await this.#instantiateJob(job)
-		// 		} catch (e) {
-		// 			this.#logger.error(`Job ${job.name} was not able to be created`)
-		// 			this.#logger.error(e)
-		// 			return
-		// 		}
-
-		// 		this.#logger.info(`Job ${job.name} started`)
-		// 		await this.#app.container.call(jobClassInstance, 'handle', [job.data])
-		// 		this.#logger.info(`Job ${job.name} finished`)
-		// 	},
-		// 	computedConfig as WorkerOptions,
-		// )
-
-		for (let i = 0; i < 10; i++) {
-			let worker = new Worker(
-				queueName || 'default',
-				async (job) => {
-					let jobClassInstance: Job
-
-					try {
-						jobClassInstance = await this.#instantiateJob(job)
-					} catch (e) {
-						this.#logger.error(`Job ${job.name} was not able to be created`)
-						this.#logger.error(e)
-						return
-					}
-
-					this.#logger.info(`Job ${job.name} started`)
-					this.#app.container.call(jobClassInstance, 'handle', [job.data])
-					this.#logger.info(`Job ${job.name} finished`)
-				},
-				computedConfig as WorkerOptions,
-			)
-
-			worker.on('failed', async (job, error) => {
-				this.#logger.error(error.message, [])
-
-				// If removeOnFail is set to true in the job options, job instance may be undefined.
-				// This can occur if worker maxStalledCount has been reached and the removeOnFail is set to true.
-				if (job && (job.attemptsMade === job.opts.attempts || job.finishedOn)) {
-					// Call the failed method of the handler class if there is one
-					const jobClassInstance = await this.#instantiateJob(job)
-
-					await this.#app.container.call(jobClassInstance, 'rescue', [job.data, error])
-				}
-			})
+		if (concurrency) {
+			this.#logger.info(`Queue [${queueName || 'default'}] concurrency set to ${concurrency}`)
 		}
+
+		const worker = new Worker(
+			queueName || 'default',
+			async (job) => {
+				let jobClassInstance: Job
+
+				try {
+					jobClassInstance = await this.#instantiateJob(job)
+				} catch (e) {
+					this.#logger.error(`Job ${job.name} was not able to be created`)
+					this.#logger.error(e)
+					return
+				}
+
+				this.#logger.info(`Job ${job.name} started`)
+				await this.#app.container.call(jobClassInstance, 'handle', [job.data])
+				this.#logger.info(`Job ${job.name} finished`)
+			},
+			computedConfig as WorkerOptions,
+		)
+
+		worker.on('failed', async (job, error) => {
+			this.#logger.error(error.message, [])
+
+			// If removeOnFail is set to true in the job options, job instance may be undefined.
+			// This can occur if worker maxStalledCount has been reached and the removeOnFail is set to true.
+			if (job && (job.attemptsMade === job.opts.attempts || job.finishedOn)) {
+				// Call the failed method of the handler class if there is one
+				const jobClassInstance = await this.#instantiateJob(job)
+
+				await this.#app.container.call(jobClassInstance, 'rescue', [job.data, error])
+			}
+		})
 
 		return this
 	}
