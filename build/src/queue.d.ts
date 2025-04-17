@@ -11,6 +11,10 @@ import type { AllowedJobTypes, InferJobPayload, JobHandlerConstructor, QueueConf
 export declare class QueueManager {
     #private;
     constructor(options: QueueConfig, logger: LoggerService, app: ApplicationService);
+    actualQueueName(options: JobsOptions & {
+        queueName?: string;
+        concurrency?: number;
+    }): string;
     dispatch<Job extends AllowedJobTypes>(job: Job, payload: Job extends JobHandlerConstructor ? InferJobPayload<Job> : Job extends Promise<infer A> ? (A extends {
         default: JobHandlerConstructor;
     } ? InferJobPayload<A['default']> : never) : never, options?: JobsOptions & {
@@ -19,7 +23,7 @@ export declare class QueueManager {
     }): Promise<BullMQJob<any, any, string>>;
     process({ queueName }: {
         queueName?: string;
-    }): Promise<this>;
+    }): Promise<this | undefined>;
     get(queueName?: string): Queue<any, any, string, any, any, string> | undefined;
     getOrSet(queueName?: string): Queue<any, any, string, any, any, string>;
     clear(queueName?: string): Promise<void>;

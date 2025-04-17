@@ -73,6 +73,12 @@ export class QueueManager {
 		return this.#queues.get(queueName)!
 	}
 
+	actualQueueName(options: JobsOptions & { queueName?: string; concurrency?: number }) {
+		if (options.concurrency) return options.queueName + '.' + options.concurrency
+		if (options.queueName) return options.queueName
+		return 'default'
+	}
+
 	async #instantiateJob(job: BullMQJob) {
 		const { default: jobClass } = await import(job.name)
 		const jobClassInstance = await this.#app.container.make(jobClass)
@@ -86,11 +92,15 @@ export class QueueManager {
 		payload: Job extends JobHandlerConstructor ? InferJobPayload<Job> : Job extends Promise<infer A> ? (A extends { default: JobHandlerConstructor } ? InferJobPayload<A['default']> : never) : never,
 		options: JobsOptions & { queueName?: string; concurrency?: number } = {},
 	) {
-		const queueName = options.queueName || 'default'
-		const queue = this.#maybeAddQueue(queueName)
-		console.log('setting concurrency when adding job', options.concurrency)
-		console.log('queue', queue)
+		// const actualQueueName = this.actualQueueName(options)
+		const actualQueueName = options.queueName || 'default'
+
+		const queue = this.#maybeAddQueue(actualQueueName)
 		await queue.setGlobalConcurrency(options.concurrency || 1)
+		const concurrency = await queue.getGlobalConcurrency()
+
+		console.log('actualQueueName', actualQueueName)
+		console.log('concurrency', concurrency)
 
 		const jobClass = await this.#resolveJob(job)
 		const jobPath = this.#getJobPath(jobClass)
@@ -113,12 +123,16 @@ export class QueueManager {
 		}
 
 		const queue = this.#queues.get(queueName || 'default')
+		if (!queue) {
+			this.#logger.error(`Queue [${queueName || 'default'}] not found`)
+			return
+		}
+
 		const concurrency = await queue?.getGlobalConcurrency()
 
 		console.log('--------processing jobs---------')
-		console.log(queue)
-		console.log(this.#queues)
-		console.log(`Queue [${queueName || 'default'}] concurrency set to ${concurrency}`)
+		console.log(queue.name)
+		console.log(`Queue ${queue.name} concurrency set to ${concurrency}`)
 
 		computedConfig.concurrency = concurrency ? concurrency : 1
 
