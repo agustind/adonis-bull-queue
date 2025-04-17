@@ -78,8 +78,8 @@ export class QueueManager {
             computedConfig.connection = this.#options.defaultConnection;
         }
         const queue = this.#queues.get(queueName || 'default');
+        await queue?.setGlobalConcurrency(2);
         const concurrency = await queue?.getGlobalConcurrency();
-        queue?.setGlobalConcurrency(2);
         this.#logger.info(`Queue [${queueName || 'default'}] concurrency set to ${concurrency}`);
         const worker = new Worker(queueName || 'default', async (job) => {
             let jobClassInstance;
