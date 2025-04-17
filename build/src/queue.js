@@ -62,6 +62,8 @@ export class QueueManager {
     async dispatch(job, payload, options = {}) {
         const queueName = options.queueName || 'default';
         const queue = this.#maybeAddQueue(queueName);
+        console.log('setting concurrency when adding job', options.concurrency);
+        console.log('queue', queue);
         await queue.setGlobalConcurrency(options.concurrency || 1);
         const jobClass = await this.#resolveJob(job);
         const jobPath = this.#getJobPath(jobClass);
@@ -80,6 +82,7 @@ export class QueueManager {
         }
         const queue = this.#queues.get(queueName || 'default');
         const concurrency = await queue?.getGlobalConcurrency();
+        console.log('--------processing jobs---------');
         console.log(queue);
         console.log(this.#queues);
         console.log(`Queue [${queueName || 'default'}] concurrency set to ${concurrency}`);
