@@ -15,6 +15,7 @@ export declare class QueueManager {
         default: JobHandlerConstructor;
     } ? InferJobPayload<A['default']> : never) : never, options?: JobsOptions & {
         queueName?: string;
+        concurrency?: number;
     }): Promise<BullMQJob<any, any, string>>;
     process({ queueName }: {
         queueName?: string;

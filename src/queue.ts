@@ -84,10 +84,11 @@ export class QueueManager {
 	async dispatch<Job extends AllowedJobTypes>(
 		job: Job,
 		payload: Job extends JobHandlerConstructor ? InferJobPayload<Job> : Job extends Promise<infer A> ? (A extends { default: JobHandlerConstructor } ? InferJobPayload<A['default']> : never) : never,
-		options: JobsOptions & { queueName?: string } = {},
+		options: JobsOptions & { queueName?: string; concurrency?: number } = {},
 	) {
 		const queueName = options.queueName || 'default'
 		const queue = this.#maybeAddQueue(queueName)
+		await queue.setGlobalConcurrency(options.concurrency || 1)
 
 		const jobClass = await this.#resolveJob(job)
 		const jobPath = this.#getJobPath(jobClass)
@@ -110,13 +111,13 @@ export class QueueManager {
 		}
 
 		const queue = this.#queues.get(queueName || 'default')
-		await queue?.setGlobalConcurrency(2)
 		const concurrency = await queue?.getGlobalConcurrency()
 
 		console.log(queue)
 		console.log(this.#queues)
 		console.log(`Queue [${queueName || 'default'}] concurrency set to ${concurrency}`)
-		computedConfig.concurrency = 2
+
+		computedConfig.concurrency = concurrency ? concurrency : 1
 
 		const worker = new Worker(
 			queueName || 'default',
