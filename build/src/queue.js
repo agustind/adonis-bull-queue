@@ -83,6 +83,7 @@ export class QueueManager {
         console.log(queue);
         console.log(this.#queues);
         console.log(`Queue [${queueName || 'default'}] concurrency set to ${concurrency}`);
+        computedConfig.concurrency = 2;
         const worker = new Worker(queueName || 'default', async (job) => {
             let jobClassInstance;
             try {
