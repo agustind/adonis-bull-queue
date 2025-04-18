@@ -149,9 +149,7 @@ export class QueueManager {
 					return
 				}
 
-				this.#logger.info(`Job ${job.name} started`)
 				await this.#app.container.call(jobClassInstance, 'handle', [job.data])
-				this.#logger.info(`Job ${job.name} finished`)
 			},
 			computedConfig as WorkerOptions,
 		)
