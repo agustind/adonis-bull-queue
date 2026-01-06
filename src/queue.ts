@@ -97,7 +97,7 @@ export class QueueManager {
 
 		const queue = this.#maybeAddQueue(actualQueueName)
 		await queue.setGlobalConcurrency(options.concurrency || 1)
-		const concurrency = await queue.getGlobalConcurrency()
+		const concurrency = 20
 
 		console.log('actualQueueName', actualQueueName)
 		console.log('concurrency', concurrency)
@@ -128,7 +128,7 @@ export class QueueManager {
 			return
 		}
 
-		const concurrency = await queue?.getGlobalConcurrency()
+		const concurrency = 20
 
 		console.log('--------processing jobs---------')
 		console.log(queue.name)
